@@ -1,0 +1,255 @@
+import java.util.List;
+import java.util.Set;
+
+public class Main {
+    public static void main(String[] args) {
+        final var users = List.of(
+                new User(1, 1, Set.of(1), List.of(1), false),
+                new User(2, 2, Set.of(1, 2), List.of(1, 2), true));
+        final var companies = List.of(
+                new Company(1, Set.of(1), true),
+                new Company(2, Set.of(1, 2), true));
+        final var timeslots = List.of(
+                new Timeslot(1, 5),
+                new Timeslot(2, 5),
+                new Timeslot(3, 5));
+
+        Solver.solve(users, companies, timeslots);
+    }
+
+    record User(int id, int order, Set<Integer> timeslots, List<Integer> companies, boolean allowGroupMeetings) {
+    }
+
+    record Company(int id, Set<Integer> timeslots, boolean allowGroupMeetings) {
+    }
+
+    record Timeslot(int id, int roomsCount) {
+    }
+}
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
+
+class Solver {
+
+    static void solve(final List<Main.User> users, final List<Main.Company> companies, final List<Main.Timeslot> timeslots) {
+        final var pairs = users.stream()
+                .sorted(Comparator.comparing(Main.User::order))
+                .flatMap(user -> user.companies().stream().map(companyId -> new Pair(user.id(), companyId)))
+                .toList();
+
+        final var usersThatAllowGroupMeetings = users.stream().filter(Main.User::allowGroupMeetings).map(Main.User::id).collect(toSet());
+        final var companiesThatAllowGroupMeetings = companies.stream().filter(Main.Company::allowGroupMeetings).map(Main.Company::id).collect(toSet());
+        final var usersTimeslots = users.stream().collect(toMap(Main.User::id, Main.User::timeslots));
+        final var companiesTimeslots = companies.stream().collect(toMap(Main.Company::id, Main.Company::timeslots));
+        final var timeslotsRoomsCount = timeslots.stream().collect(toMap(Main.Timeslot::id, Main.Timeslot::roomsCount));
+        final var matcher = new Matcher(usersThatAllowGroupMeetings, companiesThatAllowGroupMeetings, pairs);
+
+        matcher.match(usersTimeslots, companiesTimeslots, timeslotsRoomsCount);
+    }
+
+    private static class Matcher {
+        private final Set<Integer> usersThatAllowGroupMeetings;
+        private final Set<Integer> companiesThatAllowGroupMeetings;
+        private final List<Pair> pairs;
+        private List<State> states = new ArrayList<>();
+        private int currentMaxIndex = 0;
+
+        private Matcher(final Set<Integer> usersThatAllowGroupMeetings,
+                        final Set<Integer> companiesThatAllowGroupMeetings,
+                        final List<Pair> pairs) {
+            this.usersThatAllowGroupMeetings = usersThatAllowGroupMeetings;
+            this.companiesThatAllowGroupMeetings = companiesThatAllowGroupMeetings;
+            this.pairs = pairs;
+        }
+
+        private List<Set<Meeting>> match(final Map<Integer, Set<Integer>> usersTimeslots,
+                                         final Map<Integer, Set<Integer>> companiesTimeslots,
+                                         final Map<Integer, Integer> timeslotsRoomsCount) {
+            states = initialStates(usersTimeslots, companiesTimeslots, timeslotsRoomsCount);
+
+            int index = currentMaxIndex;
+            while (index < pairs.size()) {
+                for (var state : List.copyOf(states)) {
+                    matchRecursively(index, state.meetings, state.usersTimeslots, state.companiesTimeslots, state.timeslotsRoomsCount);
+                }
+
+                states = statesWithoutDuplicates();
+                index = currentMaxIndex + 1;
+            }
+
+            return states.stream().map(State::uniqueMeetings).toList();
+        }
+
+        private ArrayList<State> initialStates(final Map<Integer, Set<Integer>> usersTimeslots,
+                                               final Map<Integer, Set<Integer>> companiesTimeslots,
+                                               final Map<Integer, Integer> timeslotsRoomsCount) {
+            final var initialState = new State(Map.of(), usersTimeslots, companiesTimeslots, timeslotsRoomsCount);
+            return new ArrayList<>(List.of(initialState));
+        }
+
+        private List<State> statesWithoutDuplicates() {
+            return states.stream().distinct().collect(Collectors.toCollection(ArrayList::new));
+        }
+
+        private void matchRecursively(final int index,
+                                      final Map<Integer, Map<Integer, Meeting>> meetings,
+                                      final Map<Integer, Set<Integer>> usersTimeslots,
+                                      final Map<Integer, Set<Integer>> companiesTimeslots,
+                                      final Map<Integer, Integer> timeslotsRoomsCount) {
+
+            if (index < pairs.size()) {
+                final var pair = pairs.get(index);
+                final var userId = pair.userId;
+                final var companyId = pair.companyId;
+                final var userTimeslots = usersTimeslots.get(userId);
+                final var companyTimeslots = companiesTimeslots.get(companyId);
+
+                for (var timeslot : userTimeslots) {
+
+                    final var timeslotMeetings = meetings.get(timeslot);
+                    final var existingGroupMeeting = findExistingGroupMeeting(timeslotMeetings, companyId);
+                    final var canAttendGroupMeeting = canAttendGroupMeeting(userId, companyId);
+                    final int roomsCount = timeslotsRoomsCount.get(timeslot);
+                    final var nextIndex = index + 1;
+
+                    if (canAttendGroupMeeting && existingGroupMeeting != null) {
+                        final var updatedUsersTimeslots = update(usersTimeslots, userId, remove(userTimeslots, timeslot));
+                        final var updatedMeeting = existingGroupMeeting.addUser(userId);
+                        final var updatedTimeslotMeetings = update(timeslotMeetings, companyId, updatedMeeting);
+                        final var updatedMeetings = update(meetings, timeslot, updatedTimeslotMeetings);
+
+                        matchRecursively(nextIndex, updatedMeetings, updatedUsersTimeslots, companiesTimeslots, timeslotsRoomsCount);
+                    } else if (roomsCount > 0 && companyTimeslots.contains(timeslot)) {
+                        final var updatedUsersTimeslots = update(usersTimeslots, userId, remove(userTimeslots, timeslot));
+                        final var updatedCompaniesTimeslots = canAttendGroupMeeting ? companiesTimeslots : update(companiesTimeslots, companyId, remove(companyTimeslots, timeslot));
+                        final var updatedTimeslotsRoomsCount = update(timeslotsRoomsCount, timeslot, roomsCount - 1);
+
+                        final int[] users = {userId};
+                        final var newMeeting = new Meeting(users, companyId, timeslot, canAttendGroupMeeting);
+                        final var updatedTimeslotMeetings = timeslotMeetings != null ? update(timeslotMeetings, companyId, newMeeting) : Map.of(companyId, newMeeting);
+                        final var updatedMeetings = update(meetings, timeslot, updatedTimeslotMeetings);
+
+                        matchRecursively(nextIndex, updatedMeetings, updatedUsersTimeslots, updatedCompaniesTimeslots, updatedTimeslotsRoomsCount);
+                    }
+                }
+                updateState(index, meetings, usersTimeslots, companiesTimeslots, timeslotsRoomsCount);
+            }
+            updateState(index, meetings, usersTimeslots, companiesTimeslots, timeslotsRoomsCount);
+        }
+
+        private static Meeting findExistingGroupMeeting(Map<Integer, Meeting> timeslotMeetings, int companyId) {
+            if (timeslotMeetings != null) {
+                final var meeting = timeslotMeetings.get(companyId);
+                return (meeting != null && meeting.allowGroups) ? meeting : null;
+            }
+            return null;
+        }
+
+        private boolean canAttendGroupMeeting(final int userId, final int companyId) {
+            return usersThatAllowGroupMeetings.contains(userId) && companiesThatAllowGroupMeetings.contains(companyId);
+        }
+
+        private void updateState(final int index,
+                                 final Map<Integer, Map<Integer, Meeting>> meetings,
+                                 final Map<Integer, Set<Integer>> usersTimeslots,
+                                 final Map<Integer, Set<Integer>> companiesTimeslots,
+                                 final Map<Integer, Integer> timeslotsRoomsCount) {
+            if (currentMaxIndex < index) states.clear();
+
+            if (currentMaxIndex <= index) {
+                currentMaxIndex = index;
+                states.add(new State(meetings, usersTimeslots, companiesTimeslots, timeslotsRoomsCount));
+            }
+        }
+
+        record Meeting(int[] userIds, int companyId, int timeslot, boolean allowGroups) {
+
+            Meeting addUser(final int userId) {
+                return new Meeting(add(userIds, userId), companyId, timeslot, allowGroups);
+            }
+
+            @Override
+            public boolean equals(final Object o) {
+                if (o == null || getClass() != o.getClass()) return false;
+                final Meeting meeting = (Meeting) o;
+                return timeslot == meeting.timeslot &&
+                        companyId == meeting.companyId &&
+                        allowGroups == meeting.allowGroups &&
+                        Objects.deepEquals(userIds, meeting.userIds);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(Arrays.hashCode(userIds), companyId, timeslot, allowGroups);
+            }
+        }
+
+        private static Set<Integer> remove(final Set<Integer> origin, final Integer value) {
+            final var set = new HashSet<>(origin);
+            set.remove(value);
+            return set;
+        }
+
+        private static <K, V> Map<K, V> update(final Map<K, V> origin, final K key, final V value) {
+            final var map = new HashMap<>(origin);
+            map.put(key, value);
+            return map;
+        }
+
+        private static int[] add(final int[] origin, final int newValue) {
+            final var newArray = Arrays.copyOf(origin, origin.length + 1);
+            newArray[newArray.length - 1] = newValue;
+            return newArray;
+        }
+
+        private record State(
+                Map<Integer, Map<Integer, Meeting>> meetings,
+                Map<Integer, Set<Integer>> usersTimeslots,
+                Map<Integer, Set<Integer>> companiesTimeslots,
+                Map<Integer, Integer> timeslotsRoomsCount) {
+
+            private Set<Meeting> uniqueMeetings() {
+                return meetings
+                        .values()
+                        .stream()
+                        .map(Map::values)
+                        .flatMap(Collection::stream)
+                        .collect(toSet());
+            }
+
+            @Override
+            public boolean equals(final Object o) {
+                if (o == null || getClass() != o.getClass()) return false;
+                State state = (State) o;
+                final var uniqueMeetings = uniqueMeetings();
+                final var otherUniquerMeetings = state.uniqueMeetings();
+                return uniqueMeetings.size() == otherUniquerMeetings.size() && uniqueMeetings.containsAll(otherUniquerMeetings);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(uniqueMeetings());
+            }
+        }
+    }
+
+    private record Pair(int userId, int companyId) {
+    }
+}
