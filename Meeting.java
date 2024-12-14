@@ -12,9 +12,9 @@ record Meeting(int[] userIds, int companyId, int timeslot, boolean allowGroups) 
         if (o == null || getClass() != o.getClass()) return false;
         final Meeting meeting = (Meeting) o;
         return timeslot == meeting.timeslot &&
-                companyId == meeting.companyId &&
-                allowGroups == meeting.allowGroups &&
-                Objects.deepEquals(userIds, meeting.userIds);
+               companyId == meeting.companyId &&
+               allowGroups == meeting.allowGroups &&
+               Objects.deepEquals(userIds, meeting.userIds);
     }
 
     @Override

@@ -5,11 +5,18 @@ import java.util.Map;
 import static java.util.stream.Collectors.toMap;
 
 class BestMeetingsPicker {
+    private final MatcherContext context;
+    private final SnapshotsTracker snapshotsTracker;
 
-    static List<Meeting> findBestMatchedMeetings(final List<Pair> pairs, final List<Snapshot> snapshots) {
-        var meetings = extractMeetings(snapshots);
+    BestMeetingsPicker(final MatcherContext context, final SnapshotsTracker snapshotsTracker) {
+        this.context = context;
+        this.snapshotsTracker = snapshotsTracker;
+    }
 
-        for (var pair : pairs) {
+    List<Meeting> pickMeetings() {
+        var meetings = extractMeetings();
+
+        for (var pair : context.pairs()) {
             meetings = extractSoloMeetingsIfExist(pair, meetings);
         }
 
@@ -37,8 +44,8 @@ class BestMeetingsPicker {
         return meeting != null && meeting.userIds().length == 1;
     }
 
-    private static List<Map<Pair, Meeting>> extractMeetings(final List<Snapshot> snapshots) {
-        return snapshots
+    private List<Map<Pair, Meeting>> extractMeetings() {
+        return snapshotsTracker.snapshots()
                 .stream()
                 .map(Snapshot::uniqueMeetings)
                 .map(meetings ->
