@@ -13,7 +13,7 @@ class Solver {
         this.snapshots = snapshots;
     }
 
-    List<Meeting> match() {
+    List<Meeting> createMeetings() {
         findAllPossibleMeetingsConfigurations();
         return meetingsCreator.createMeetings();
     }

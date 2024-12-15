@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +31,7 @@ class Snapshots {
                                 final Map<Long, Set<Long>> companiesTimeslots,
                                 final Map<Long, Map<Integer, Integer>> timeslotsRooms) {
 
-        final var initialSnapshot = new Snapshot(Map.of(), Map.of(), usersTimeslots, companiesTimeslots, timeslotsRooms);
+        final var initialSnapshot = new Snapshot(new HashMap<>(), new HashMap<>(), usersTimeslots, companiesTimeslots, timeslotsRooms);
         return new Snapshots(new ArrayList<>(List.of(initialSnapshot)));
     }
 
