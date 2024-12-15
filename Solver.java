@@ -2,20 +2,20 @@ import java.util.List;
 
 class Solver {
     private final Context context;
-    private final BestMeetingsPicker bestMeetingsPicker;
+    private final MeetingsCreator meetingsCreator;
     private final Snapshots snapshots;
 
     Solver(final Context context,
-           final BestMeetingsPicker bestMeetingsPicker,
+           final MeetingsCreator meetingsCreator,
            final Snapshots snapshots) {
-        this.bestMeetingsPicker = bestMeetingsPicker;
+        this.meetingsCreator = meetingsCreator;
         this.context = context;
         this.snapshots = snapshots;
     }
 
     List<Meeting> match() {
         findAllPossibleMeetingsConfigurations();
-        return bestMeetingsPicker.pickMeetings();
+        return meetingsCreator.createMeetings();
     }
 
     private void findAllPossibleMeetingsConfigurations() {

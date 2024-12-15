@@ -13,9 +13,9 @@ import static java.util.stream.Collectors.toSet;
 class MatcherFactory {
 
     static Solver create(final List<User> users, final List<Company> companies, final List<Timeslot> timeslots) {
-        final var context = createContext(users, companies);
+        final var context = createContext(users, companies, timeslots);
         final var initialSnapshots = createInitialSnapshots(users, companies, timeslots);
-        final var bestMeetingsPicker = new BestMeetingsPicker(context, initialSnapshots);
+        final var bestMeetingsPicker = new MeetingsCreator(context, initialSnapshots);
 
         return new Solver(context, bestMeetingsPicker, initialSnapshots);
     }
@@ -27,12 +27,12 @@ class MatcherFactory {
         return Snapshots.initialize(usersTimeslots, companiesTimeslots, timeslotsRooms);
     }
 
-    private static Context createContext(final List<User> users, final List<Company> companies) {
+    private static Context createContext(final List<User> users, final List<Company> companies, final List<Timeslot> timeslots) {
         final var pairs = createPairs(users);
         final var usersThatAllowGroupMeetings = usersThatAllowGroupMeetings(users);
         final var companiesThatAllowGroupMeetings = companiesThatAllowGroupMeetings(companies);
         final var usersTimeslots = usersTimeslots(users);
-        return new Context(usersThatAllowGroupMeetings, companiesThatAllowGroupMeetings, usersTimeslots, pairs);
+        return new Context(usersThatAllowGroupMeetings, companiesThatAllowGroupMeetings, usersTimeslots, timeslots, pairs);
     }
 
     private static Map<Long, Set<Long>> usersTimeslots(final List<User> users) {

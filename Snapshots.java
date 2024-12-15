@@ -2,7 +2,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Function;
+
+import static java.util.stream.Collectors.toMap;
 
 class Snapshots {
     private int currentMaxIndex;
@@ -58,8 +60,13 @@ class Snapshots {
     }
 
     void removeDuplicates() {
-        // todo fix distinct by hashcode/equals?
-        snapshots = snapshots.stream().distinct().collect(Collectors.toCollection(ArrayList::new));
+        snapshots = new ArrayList<>(
+                snapshots.stream()
+                        .collect(toMap(
+                                MeetingWithoutRoom::toMeetings,
+                                Function.identity(),
+                                (snapshot1, snapshot2) -> snapshot1))
+                        .values());
     }
 
     List<Snapshot> snapshots() {

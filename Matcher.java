@@ -140,7 +140,7 @@ class Matcher {
     }
 
     private boolean canBeGroupMeeting(final long userId, final long companyId) {
-        return context.usersThatAllowGroupMeetings().contains(userId) && context.usersThatAllowGroupMeetings().contains(companyId);
+        return context.usersThatAllowGroupMeetings().contains(userId) && context.companiesThatAllowGroupMeetings().contains(companyId);
     }
 
     private MeetingRoom existingGroupMeetingRoom(final long timeslot, final long companyId) {
