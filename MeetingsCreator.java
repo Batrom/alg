@@ -1,5 +1,7 @@
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -12,13 +14,13 @@ class MeetingsCreator {
         this.snapshots = snapshots;
     }
 
-    List<Meeting> createMeetings() {
+    Set<Meeting> createMeetings() {
         final var meetings = pickMeetings();
         final var timeslotsRooms = createTimeslotsRooms();
 
         return meetings.stream()
                 .map(meeting -> createMeeting(meeting, timeslotsRooms))
-                .toList();
+                .collect(Collectors.toSet());
     }
 
     private static Meeting createMeeting(final MeetingWithoutRoom meeting, final Map<Long, Map<Integer, Long>> timeslotsRooms) {

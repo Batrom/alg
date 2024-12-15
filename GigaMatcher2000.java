@@ -2,7 +2,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-class Matcher {
+class GigaMatcher2000 {
     private int index;
     private final Map<Long, Map<Long, MeetingRoom>> soloMeetings;
     private final Map<Long, Map<Long, MeetingRoom>> groupMeetings;
@@ -13,7 +13,7 @@ class Matcher {
     private final Snapshots snapshots;
     private final Context context;
 
-    Matcher(final Context context, final Snapshot snapshot, final int index) {
+    GigaMatcher2000(final Context context, final Snapshot snapshot, final int index) {
         this.context = context;
         this.index = index;
         this.snapshots = new Snapshots(index, snapshot);
@@ -147,7 +147,7 @@ class Matcher {
         final var timeslotGroupMeetings = groupMeetings.get(timeslot);
         if (timeslotGroupMeetings != null) {
             final var meetingRoom = timeslotGroupMeetings.get(companyId);
-            if (meetingRoom.isNotFull() && meetingRoom.isNotEmpty()) return meetingRoom;
+            if (meetingRoom != null && meetingRoom.isNotFull() && meetingRoom.isNotEmpty()) return meetingRoom;
         }
         return null;
     }

@@ -1,4 +1,4 @@
-import java.util.List;
+import java.util.Set;
 
 class Solver {
     private final Context context;
@@ -13,7 +13,7 @@ class Solver {
         this.snapshots = snapshots;
     }
 
-    List<Meeting> createMeetings() {
+    Set<Meeting> createMeetings() {
         findAllPossibleMeetingsConfigurations();
         return meetingsCreator.createMeetings();
     }
@@ -23,7 +23,7 @@ class Solver {
         while (snapshots.currentMaxIndex() < context.pairs().size()) {
             final var index = snapshots.currentMaxIndex();
             for (final var snapshot : snapshots.snapshots()) {
-                collector.submit(() -> new Matcher(context, snapshot, index).match());
+                collector.submit(() -> new GigaMatcher2000(context, snapshot, index).match());
             }
             collector.collect();
             snapshots.removeDuplicates();

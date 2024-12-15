@@ -4,7 +4,7 @@ import java.util.Set;
 public class Main {
     public static void main(String[] args) {
         final var users = List.of(
-                new User(1, 1, Set.of(1L), List.of(1L), false),
+                new User(1, 1, Set.of(1L), List.of(1L), true),
                 new User(2, 2, Set.of(1L, 2L), List.of(1L, 2L), true));
         final var companies = List.of(
                 new Company(1, Set.of(1L), true),
