@@ -37,7 +37,7 @@ class GigaMatcher2000 {
             final var userAvailableTimeslots = usersAvailableTimeslots.get(userId);
 
             for (final var timeslot : userTimeslots) {
-                if (!userAvailableTimeslots.contains(timeslot)) continue;
+                if (timeslotIsUsed(timeslot, userAvailableTimeslots)) continue;
 
                 addToExistingGroupMeeting(timeslot, pair);
                 createNewMeeting(timeslot, pair);
@@ -46,6 +46,10 @@ class GigaMatcher2000 {
             snapshots.updateSnapshots(index, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, timeslotsFreeRooms);
         }
         snapshots.updateSnapshots(index - 1, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, timeslotsFreeRooms);
+    }
+
+    private static boolean timeslotIsUsed(final Long timeslot, final Set<Long> userAvailableTimeslots) {
+        return userAvailableTimeslots == null || !userAvailableTimeslots.contains(timeslot);
     }
 
     private void addToExistingGroupMeeting(final long timeslot, final Pair pair) {
@@ -76,7 +80,7 @@ class GigaMatcher2000 {
         final var userAvailableTimeslots = usersAvailableTimeslots.get(userId);
         final var timeslotRooms = timeslotsFreeRooms.get(timeslot);
 
-        if (companyAvailableTimeslots.contains(timeslot) && timeslotRooms != null) {
+        if (companyAvailableTimeslots != null && companyAvailableTimeslots.contains(timeslot) && timeslotRooms != null) {
             for (final var capacityToRoomsCount : timeslotRooms.entrySet()) {
                 final var capacity = capacityToRoomsCount.getKey();
                 final var roomsCount = capacityToRoomsCount.getValue();

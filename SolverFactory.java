@@ -17,9 +17,9 @@ class SolverFactory {
     static Solver create(final List<User> users, final List<Company> companies, final List<Timeslot> timeslots) {
         final var context = createContext(users, companies, timeslots);
         final var initialSnapshots = createInitialSnapshots(users, companies, timeslots);
-        final var bestMeetingsPicker = new MeetingsCreator(context, initialSnapshots);
+        final var meetingsCreator = new MeetingsCreator(context, initialSnapshots);
 
-        return new Solver(context, bestMeetingsPicker, initialSnapshots);
+        return new Solver(context, meetingsCreator, initialSnapshots);
     }
 
     private static Snapshots createInitialSnapshots(final List<User> users, final List<Company> companies, final List<Timeslot> timeslots) {

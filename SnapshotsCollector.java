@@ -21,17 +21,16 @@ class SnapshotsCollector {
 
     void submit(final Callable<Snapshots> task) {
         futures.add(executor.submit(task));
-        latch.countDown();
     }
 
     void collect() {
-        waitForAllSubmission();
         snapshots.mergeWith(otherSnapshots());
+        waitForAllSubmission();
         futures.clear();
     }
 
     private List<Snapshots> otherSnapshots() {
-        return futures.stream().map(SnapshotsCollector::tryToGet).toList();
+        return futures.stream().map(this::tryToGet).toList();
     }
 
     private void waitForAllSubmission() {
@@ -42,9 +41,11 @@ class SnapshotsCollector {
         }
     }
 
-    private static Snapshots tryToGet(final Future<Snapshots> future) {
+    private Snapshots tryToGet(final Future<Snapshots> future) {
         try {
-            return future.get();
+            final var snapshots = future.get();
+            latch.countDown();
+            return snapshots;
         } catch (final InterruptedException | ExecutionException ex) {
             throw new RuntimeException(ex);
         }
