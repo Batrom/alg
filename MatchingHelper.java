@@ -1,26 +1,78 @@
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 class MatchingHelper {
 
-    static Set<Integer> remove(final Set<Integer> origin, final Integer value) {
-        final var set = new HashSet<>(origin);
-        set.remove(value);
-        return set;
+    static <T> List<T> listOf(final T obj) {
+        final var list = new ArrayList<T>();
+        list.add(obj);
+        return list;
     }
 
-    static <K, V> Map<K, V> update(final Map<K, V> origin, final K key, final V value) {
-        final var map = new HashMap<>(origin);
-        map.put(key, value);
-        return map;
+    static Map<Long, Set<Long>> copyTimeslots(final Map<Long, Set<Long>> original) {
+        final var copy = new HashMap<Long, Set<Long>>(original.size());
+
+        for (final var entry : original.entrySet()) {
+            final var originalSet = entry.getValue();
+            if (!originalSet.isEmpty()) {
+                final var newSet = new HashSet<>(originalSet);
+                copy.put(entry.getKey(), newSet);
+            }
+        }
+
+        return copy;
     }
 
-    static int[] add(final int[] origin, final int newValue) {
-        final var newArray = Arrays.copyOf(origin, origin.length + 1);
-        newArray[newArray.length - 1] = newValue;
-        return newArray;
+    static Map<Long, Map<Integer, Integer>> copyRooms(final Map<Long, Map<Integer, Integer>> original) {
+        final var copy = new HashMap<Long, Map<Integer, Integer>>(original.size());
+
+        for (final var entry : original.entrySet()) {
+            var allRoomsCountsAreZero = true;
+            final var innerMap = entry.getValue();
+
+            final var innerMapCopy = new HashMap<Integer, Integer>(innerMap.size());
+            for (final var innerEntry : innerMap.entrySet()) {
+                final var roomsCount = innerEntry.getValue();
+                if (roomsCount != 0) {
+                    allRoomsCountsAreZero = false;
+                    innerMapCopy.put(innerEntry.getKey(), roomsCount);
+                }
+            }
+
+            if (!allRoomsCountsAreZero) copy.put(entry.getKey(), innerMapCopy);
+        }
+
+        return copy;
+    }
+
+    static Map<Long, Map<Long, MeetingRoom>> copyMeetings(final Map<Long, Map<Long, MeetingRoom>> original) {
+        final var copy = new HashMap<Long, Map<Long, MeetingRoom>>(original.size());
+
+        for (final var entry : original.entrySet()) {
+            var allRoomsAreEmpty = true;
+            final var innerMap = entry.getValue();
+
+            final var innerMapCopy = new HashMap<Long, MeetingRoom>(innerMap.size());
+            for (final var innerEntry : innerMap.entrySet()) {
+                final var room = innerEntry.getValue();
+                if (room.isNotEmpty()) {
+                    allRoomsAreEmpty = false;
+                    innerMapCopy.put(innerEntry.getKey(), room.copy());
+                }
+            }
+
+            if (!allRoomsAreEmpty) copy.put(entry.getKey(), innerMapCopy);
+        }
+
+        return copy;
+    }
+
+    static <T> boolean isEmpty(final Collection<T> collection) {
+        return collection == null || collection.isEmpty();
     }
 }

@@ -38,12 +38,12 @@ public class Main {
         final var timeslotsCount = 100;
         final var roomsCount = 10;
         for (int i = 1; i <= usersCount; i++) {
-            int order = i;
-            Set<Integer> timeslots = new HashSet<>();
+            long order = i;
+            Set<Long> timeslots = new HashSet<>();
             for (int j = 1; j <= rand.nextInt(10) + 1; j++) {
                 timeslots.add(rand.nextInt(timeslotsCount) + 1);
             }
-            List<Integer> companies = new ArrayList<>();
+            List<Long> companies = new ArrayList<>();
             for (int j = 1; j <= rand.nextInt(10) + 1; j++) {
                 companies.add(rand.nextInt(companiesCount) + 1);
             }
@@ -54,7 +54,7 @@ public class Main {
         // Generate 100 Companies
         List<Company> companies = new ArrayList<>();
         for (int i = 1; i <= companiesCount; i++) {
-            Set<Integer> timeslots = new HashSet<>();
+            Set<Long> timeslots = new HashSet<>();
             for (int j = 1; j <= rand.nextInt(10) + 1; j++) {
                 timeslots.add(rand.nextInt(timeslotsCount) + 1); // Random timeslot between 1 and 5
             }
@@ -76,14 +76,5 @@ public class Main {
 
         System.out.println(Duration.between(start, end).toSeconds());
         System.out.println(match);
-    }
-
-    record User(int id, int order, Set<Integer> timeslots, List<Integer> companies, boolean allowGroupMeetings) {
-    }
-
-    record Company(int id, Set<Integer> timeslots, boolean allowGroupMeetings) {
-    }
-
-    record Timeslot(int id, int roomsCount) {
     }
 }

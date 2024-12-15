@@ -5,12 +5,12 @@ import java.util.Map;
 import static java.util.stream.Collectors.toMap;
 
 class BestMeetingsPicker {
-    private final MatcherContext context;
-    private final SnapshotsTracker snapshotsTracker;
+    private final Context context;
+    private final Snapshots snapshots;
 
-    BestMeetingsPicker(final MatcherContext context, final SnapshotsTracker snapshotsTracker) {
+    BestMeetingsPicker(final Context context, final Snapshots snapshots) {
         this.context = context;
-        this.snapshotsTracker = snapshotsTracker;
+        this.snapshots = snapshots;
     }
 
     List<Meeting> pickMeetings() {
@@ -45,7 +45,7 @@ class BestMeetingsPicker {
     }
 
     private List<Map<Pair, Meeting>> extractMeetings() {
-        return snapshotsTracker.snapshots()
+        return snapshots.snapshots()
                 .stream()
                 .map(Snapshot::uniqueMeetings)
                 .map(meetings ->

@@ -1,2 +1,2 @@
-record Pair(int userId, int companyId) {
+record Pair(long userId, long companyId) {
 }
