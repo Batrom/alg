@@ -12,11 +12,11 @@ class SnapshotsCollector {
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private final Queue<Future<Snapshots>> futures = new ConcurrentLinkedQueue<>();
     private final CountDownLatch latch;
-    private final Snapshots snapshots;
+    private final Snapshots initialSnapshots;
 
-    SnapshotsCollector(final Snapshots snapshots) {
-        this.latch = new CountDownLatch(snapshots.snapshots().size());
-        this.snapshots = snapshots;
+    SnapshotsCollector(final Snapshots initialSnapshots) {
+        this.latch = new CountDownLatch(initialSnapshots.snapshots().size());
+        this.initialSnapshots = initialSnapshots;
     }
 
     void submit(final Callable<Snapshots> task) {
@@ -24,7 +24,7 @@ class SnapshotsCollector {
     }
 
     void collect() {
-        snapshots.mergeWith(otherSnapshots());
+        initialSnapshots.mergeWith(otherSnapshots());
         waitForAllSubmission();
         futures.clear();
     }

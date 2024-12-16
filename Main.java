@@ -7,14 +7,14 @@ import java.util.stream.IntStream;
 public class Main {
     public static void main(String[] args) {
         final var numberOfUsers = 10;
-        final var numberOfTimeslotsPerUser = 2;
-        final var numberOfCompaniesPerUser = 10;
+        final var numberOfTimeslotsPerUser = 5;
+        final var numberOfCompaniesPerUser = 5;
 
-        final var numberOfCompanies = 10;
-        final var numberOfTimeslotsPerCompany = 2;
+        final var numberOfCompanies = 5;
+        final var numberOfTimeslotsPerCompany = 5;
 
-        final var numberOfTimeslots = 2;
-        final var numberOfRoomsPerTimeslot = 5;
+        final var numberOfTimeslots = 5;
+        final var numberOfRoomsPerTimeslot = 2;
         final var roomsMaxCapacity = 5;
 
         final var users = IntStream.range(1, numberOfUsers + 1)
@@ -38,75 +38,29 @@ public class Main {
                 .toList();
 
 //        final var users = List.of(
-//                new User(1, 1, Set.of(1L), List.of(1L), true),
-//                new User(2, 2, Set.of(1L, 2L), List.of(1L, 2L), true));
+//                new User(1, 1, Set.of(1L, 2L), List.of(3L, 2L), false));
 //        final var companies = List.of(
-//                new Company(1, Set.of(1L), true),
-//                new Company(2, Set.of(1L, 2L), true));
+//                new Company(2, Set.of(1L), true),
+//                new Company(3, Set.of(1L), true));
 //        final var timeslots = List.of(
-//                new Timeslot(1, List.of(new Room(1, 5))),
-//                new Timeslot(2, List.of(new Room(1, 5))),
-//                new Timeslot(3, List.of(new Room(1, 5))));
+//                new Timeslot(1, List.of(new Room(2, 1))),
+//                new Timeslot(2, List.of(new Room(3, 1))));
+
+//        final var users = List.of(
+//                new User(1, 1, Set.of(1L, 2L), List.of(3L, 2L, 1L), false),
+//                new User(2, 2, Set.of(2L), List.of(1L, 3L, 2L), true),
+//                new User(3, 3, Set.of(2L), List.of(1L, 3L), false));
+//        final var companies = List.of(
+//                new Company(1, Set.of(2L), false),
+//                new Company(2, Set.of(1L), true),
+//                new Company(3, Set.of(1L), true));
+//        final var timeslots = List.of(
+//                new Timeslot(1, List.of(new Room(1, 5), new Room(2, 1))),
+//                new Timeslot(2, List.of(new Room(3, 1), new Room(4, 3))));
 
         final var meetings = SolverFactory.create(users, companies, timeslots).createMeetings();
         System.out.println(meetings);
 
-//        List<User> users = new ArrayList<>();
-//        List<Company> companies = new ArrayList<>();
-//        List<Timeslot> timeslots = new ArrayList<>();
-//
-//        for (int i = 0; i < 100; i++) {
-//            users.add(new User(i, i, Set.of(i), List.of(i), true));
-//            companies.add(new Company(i, Set.of(i), true));
-//            timeslots.add(new Timeslot(i, 100_000));
-//        }
-//
-//
-//        Random rand = new Random();
-//        List<User> users = new ArrayList<>();
-//        final var usersCount = 1000;
-//        final var companiesCount = 100;
-//        final var timeslotsCount = 100;
-//        final var roomsCount = 10;
-//        for (int i = 1; i <= usersCount; i++) {
-//            long order = i;
-//            Set<Long> timeslots = new HashSet<>();
-//            for (int j = 1; j <= rand.nextInt(10) + 1; j++) {
-//                timeslots.add(rand.nextInt(timeslotsCount) + 1);
-//            }
-//            List<Long> companies = new ArrayList<>();
-//            for (int j = 1; j <= rand.nextInt(10) + 1; j++) {
-//                companies.add(rand.nextInt(companiesCount) + 1);
-//            }
-//            boolean allowGroupMeetings = rand.nextBoolean();
-//            users.add(new User(i, order, timeslots, companies, true));
-//        }
-//
-//        // Generate 100 Companies
-//        List<Company> companies = new ArrayList<>();
-//        for (int i = 1; i <= companiesCount; i++) {
-//            Set<Long> timeslots = new HashSet<>();
-//            for (int j = 1; j <= rand.nextInt(10) + 1; j++) {
-//                timeslots.add(rand.nextInt(timeslotsCount) + 1); // Random timeslot between 1 and 5
-//            }
-//            boolean allowGroupMeetings = rand.nextBoolean();
-//            companies.add(new Company(i, timeslots, true));
-//        }
-//
-//        // Generate Timeslots
-//        List<Timeslot> timeslots = new ArrayList<>();
-//        for (int i = 1; i <= timeslotsCount; i++) {
-//            timeslots.add(new Timeslot(i, roomsCount));
-//        }
-//
-//        final var start = Instant.now();
-//
-//        final var match = MatcherFactory.create(users, companies, timeslots).match();
-//
-//        final var end = Instant.now();
-//
-//        System.out.println(Duration.between(start, end).toSeconds());
-//        System.out.println(match);
     }
 
     private static Set<Long> randomSet(final int size, final int max) {
@@ -114,7 +68,7 @@ public class Main {
     }
 
     private static List<Long> randomList(final int size, final int max) {
-        return new Random().longs(size, 1, max + 1).boxed().toList();
+        return new Random().longs(size, 1, max + 1).boxed().distinct().toList();
     }
 
     private static boolean randomBoolean() {

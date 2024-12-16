@@ -26,7 +26,6 @@ class Solver {
                 collector.submit(() -> new GigaMatcher2000(context, snapshot, index).match());
             }
             collector.collect();
-            snapshots.removeDuplicates();
             snapshots.incrementCurrentMaxIndex();
         }
     }

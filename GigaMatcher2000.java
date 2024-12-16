@@ -10,6 +10,7 @@ class GigaMatcher2000 {
     private final Map<Long, Set<Long>> companiesAvailableTimeslots;
     private final Map<Long, Map<Integer, Integer>> timeslotsFreeRooms;
 
+    private boolean updateSnapshots = false;
     private final Snapshots snapshots;
     private final Context context;
 
@@ -41,11 +42,12 @@ class GigaMatcher2000 {
 
                 addToExistingGroupMeeting(timeslot, pair);
                 createNewMeeting(timeslot, pair);
-
             }
-            snapshots.updateSnapshots(index, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, timeslotsFreeRooms);
         }
-        snapshots.updateSnapshots(index - 1, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, timeslotsFreeRooms);
+        if (updateSnapshots) {
+            snapshots.updateSnapshots(index, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, timeslotsFreeRooms);
+            updateSnapshots = false;
+        }
     }
 
     private static boolean timeslotIsUsed(final Long timeslot, final Set<Long> userAvailableTimeslots) {
@@ -65,6 +67,7 @@ class GigaMatcher2000 {
             meetingRoom.addUser(userId);
             index++;
 
+            updateSnapshots = true;
             matchRecursively();
 
             userAvailableTimeslots.add(timeslot);
@@ -93,8 +96,13 @@ class GigaMatcher2000 {
                 capacityToRoomsCount.setValue(roomsCount - 1);
                 index++;
 
-                newGroupMeeting(timeslot, companyId, userId, meetingRoom);
-                newSoloMeeting(timeslot, companyId, meetingRoom);
+                updateSnapshots = true;
+                if (canBeGroupMeeting(userId, companyId)) {
+                    newGroupMeeting(timeslot, companyId, meetingRoom);
+                } else {
+                    newSoloMeeting(timeslot, companyId, meetingRoom);
+                }
+
 
                 companyAvailableTimeslots.add(timeslot);
                 userAvailableTimeslots.add(timeslot);
@@ -113,15 +121,13 @@ class GigaMatcher2000 {
         meetingRooms.remove(companyId);
     }
 
-    private void newGroupMeeting(final long timeslot, final long companyId, final long userId, final MeetingRoom meetingRoom) {
-        if (canBeGroupMeeting(userId, companyId)) {
-            final var meetingRooms = timeslotGroupMeetingRooms(timeslot);
-            meetingRooms.put(companyId, meetingRoom);
+    private void newGroupMeeting(final long timeslot, final long companyId, final MeetingRoom meetingRoom) {
+        final var meetingRooms = timeslotGroupMeetingRooms(timeslot);
+        meetingRooms.put(companyId, meetingRoom);
 
-            matchRecursively();
+        matchRecursively();
 
-            meetingRooms.remove(companyId);
-        }
+        meetingRooms.remove(companyId);
     }
 
     private Map<Long, MeetingRoom> timeslotMeetingRooms(final long timeslot, final Map<Long, Map<Long, MeetingRoom>> meetings) {

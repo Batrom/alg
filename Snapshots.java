@@ -3,21 +3,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
-
-import static java.util.stream.Collectors.toMap;
 
 class Snapshots {
     private int currentMaxIndex;
-    private List<Snapshot> snapshots;
+    private final List<Snapshot> snapshots;
 
     Snapshots(final int currentMaxIndex, final Snapshot snapshot) {
         this.currentMaxIndex = currentMaxIndex;
         this.snapshots = MatchingHelper.listOf(snapshot);
     }
 
+    private Snapshots(final List<Snapshot> snapshots) {
+        this.currentMaxIndex = 0;
+        this.snapshots = snapshots;
+    }
+
     void mergeWith(final List<Snapshots> otherSnapshotsList) {
+        final var initialCurrentMaxIndex = currentMaxIndex;
         for (final var otherSnapshots : otherSnapshotsList) {
+            if (initialCurrentMaxIndex == otherSnapshots.currentMaxIndex) continue;
+
             if (currentMaxIndex < otherSnapshots.currentMaxIndex) snapshots.clear();
 
             if (currentMaxIndex <= otherSnapshots.currentMaxIndex) {
@@ -33,11 +38,6 @@ class Snapshots {
 
         final var initialSnapshot = new Snapshot(new HashMap<>(), new HashMap<>(), usersTimeslots, companiesTimeslots, timeslotsRooms);
         return new Snapshots(new ArrayList<>(List.of(initialSnapshot)));
-    }
-
-    private Snapshots(final List<Snapshot> snapshots) {
-        this.snapshots = snapshots;
-        this.currentMaxIndex = 0;
     }
 
     void updateSnapshots(final int index,
@@ -60,16 +60,6 @@ class Snapshots {
         }
     }
 
-    void removeDuplicates() {
-        snapshots = new ArrayList<>(
-                snapshots.stream()
-                        .collect(toMap(
-                                MeetingWithoutRoom::toMeetings,
-                                Function.identity(),
-                                (snapshot1, snapshot2) -> snapshot1))
-                        .values());
-    }
-
     List<Snapshot> snapshots() {
         return snapshots;
     }
@@ -79,6 +69,6 @@ class Snapshots {
     }
 
     void incrementCurrentMaxIndex() {
-        currentMaxIndex += 2;
+        currentMaxIndex++;
     }
 }
