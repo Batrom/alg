@@ -1,3 +1,5 @@
+package advanced;
+
 import java.util.Set;
 
 public record Meeting(long timeslot, long companyId, long roomId, Set<Long> userIds, boolean solo) {

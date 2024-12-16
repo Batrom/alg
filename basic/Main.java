@@ -1,3 +1,5 @@
+package basic;
+
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -6,15 +8,15 @@ import java.util.stream.IntStream;
 
 public class Main {
     public static void main(String[] args) {
-        final var numberOfUsers = 10;
-        final var numberOfTimeslotsPerUser = 5;
-        final var numberOfCompaniesPerUser = 5;
+        final var numberOfUsers = 2;
+        final var numberOfTimeslotsPerUser = 2;
+        final var numberOfCompaniesPerUser = 2;
 
-        final var numberOfCompanies = 5;
-        final var numberOfTimeslotsPerCompany = 5;
+        final var numberOfCompanies = 2;
+        final var numberOfTimeslotsPerCompany = 2;
 
-        final var numberOfTimeslots = 5;
-        final var numberOfRoomsPerTimeslot = 2;
+        final var numberOfTimeslots = 2;
+        final var numberOfRoomsPerTimeslot = 1;
         final var roomsMaxCapacity = 5;
 
         final var users = IntStream.range(1, numberOfUsers + 1)
@@ -58,8 +60,8 @@ public class Main {
 //                new Timeslot(1, List.of(new Room(1, 5), new Room(2, 1))),
 //                new Timeslot(2, List.of(new Room(3, 1), new Room(4, 3))));
 
-        final var meetings = SolverFactory.create(users, companies, timeslots).createMeetings();
-        System.out.println(meetings);
+        final var meetings = SolverFactory.create(users, companies, timeslots).solve();
+        System.out.println("asd");
 
     }
 

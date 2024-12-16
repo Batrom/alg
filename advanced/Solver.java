@@ -1,3 +1,5 @@
+package advanced;
+
 import java.util.Set;
 
 class Solver {
@@ -22,6 +24,7 @@ class Solver {
         final var collector = new SnapshotsCollector(snapshots);
         while (snapshots.currentMaxIndex() < context.pairs().size()) {
             final var index = snapshots.currentMaxIndex();
+            System.out.println(index);
             for (final var snapshot : snapshots.snapshots()) {
                 collector.submit(() -> new GigaMatcher2000(context, snapshot, index).match());
             }

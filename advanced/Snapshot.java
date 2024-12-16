@@ -1,3 +1,5 @@
+package advanced;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -11,5 +13,5 @@ record Snapshot(
         // companyId to timeslots
         Map<Long, Set<Long>> companiesAvailableTimeslots,
         // timeslot to (capacity to count)
-        Map<Long, Map<Integer, Integer>> timeslotsFreeRooms) {
+        Map<Long, Map<Integer, Integer>> timeslotsAvailableRooms) {
 }

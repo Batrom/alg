@@ -1,3 +1,5 @@
+package advanced;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -6,7 +8,7 @@ import java.util.Set;
 
 class Snapshots {
     private int currentMaxIndex;
-    private final List<Snapshot> snapshots;
+    private List<Snapshot> snapshots;
 
     Snapshots(final int currentMaxIndex, final Snapshot snapshot) {
         this.currentMaxIndex = currentMaxIndex;
@@ -30,6 +32,7 @@ class Snapshots {
                 snapshots.addAll(otherSnapshots.snapshots);
             }
         }
+        snapshots = snapshots.subList(0, Math.min(1000, snapshots.size()));
     }
 
     static Snapshots initialize(final Map<Long, Set<Long>> usersTimeslots,
@@ -45,7 +48,7 @@ class Snapshots {
                          final Map<Long, Map<Long, MeetingRoom>> groupMeetings,
                          final Map<Long, Set<Long>> usersAvailableTimeslots,
                          final Map<Long, Set<Long>> companiesAvailableTimeslots,
-                         final Map<Long, Map<Integer, Integer>> timeslotsFreeRooms) {
+                         final Map<Long, Map<Integer, Integer>> timeslotsAvailableRooms) {
         if (currentMaxIndex < index) snapshots.clear();
 
         if (currentMaxIndex <= index) {
@@ -56,7 +59,7 @@ class Snapshots {
                     MatchingHelper.copyMeetings(groupMeetings),
                     MatchingHelper.copyTimeslots(usersAvailableTimeslots),
                     MatchingHelper.copyTimeslots(companiesAvailableTimeslots),
-                    MatchingHelper.copyRooms(timeslotsFreeRooms)));
+                    MatchingHelper.copyRooms(timeslotsAvailableRooms)));
         }
     }
 

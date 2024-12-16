@@ -1,3 +1,5 @@
+package advanced;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -8,7 +10,7 @@ class GigaMatcher2000 {
     private final Map<Long, Map<Long, MeetingRoom>> groupMeetings;
     private final Map<Long, Set<Long>> usersAvailableTimeslots;
     private final Map<Long, Set<Long>> companiesAvailableTimeslots;
-    private final Map<Long, Map<Integer, Integer>> timeslotsFreeRooms;
+    private final Map<Long, Map<Integer, Integer>> timeslotsAvailableRooms;
 
     private boolean updateSnapshots = false;
     private final Snapshots snapshots;
@@ -22,7 +24,7 @@ class GigaMatcher2000 {
         this.groupMeetings = snapshot.groupMeetings();
         this.usersAvailableTimeslots = snapshot.usersAvailableTimeslots();
         this.companiesAvailableTimeslots = snapshot.companiesAvailableTimeslots();
-        this.timeslotsFreeRooms = snapshot.timeslotsFreeRooms();
+        this.timeslotsAvailableRooms = snapshot.timeslotsAvailableRooms();
     }
 
     Snapshots match() {
@@ -45,7 +47,7 @@ class GigaMatcher2000 {
             }
         }
         if (updateSnapshots) {
-            snapshots.updateSnapshots(index, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, timeslotsFreeRooms);
+            snapshots.updateSnapshots(index, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, timeslotsAvailableRooms);
             updateSnapshots = false;
         }
     }
@@ -81,7 +83,7 @@ class GigaMatcher2000 {
         final var userId = pair.userId();
         final var companyAvailableTimeslots = companiesAvailableTimeslots.get(companyId);
         final var userAvailableTimeslots = usersAvailableTimeslots.get(userId);
-        final var timeslotRooms = timeslotsFreeRooms.get(timeslot);
+        final var timeslotRooms = timeslotsAvailableRooms.get(timeslot);
 
         if (companyAvailableTimeslots != null && companyAvailableTimeslots.contains(timeslot) && timeslotRooms != null) {
             for (final var capacityToRoomsCount : timeslotRooms.entrySet()) {
@@ -102,7 +104,6 @@ class GigaMatcher2000 {
                 } else {
                     newSoloMeeting(timeslot, companyId, meetingRoom);
                 }
-
 
                 companyAvailableTimeslots.add(timeslot);
                 userAvailableTimeslots.add(timeslot);
