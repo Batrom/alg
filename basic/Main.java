@@ -61,9 +61,12 @@ public class Main {
 //                new Timeslot(2, List.of(new Room(3, 1), new Room(4, 3))));
 
         final var meetings = SolverFactory.create(users, companies, timeslots).solve();
-        System.out.println(
-                meetings.size()
-        );
+        final var all = users.stream().map(User::companies).mapToInt(List::size).reduce(Integer::sum).orElse(0);
+        final var found = meetings.stream().map(Meeting::userIds).mapToInt(List::size).reduce(Integer::sum).orElse(0);
+
+        System.out.println("meetings: " + meetings.size());
+        System.out.println("all: " + all);
+        System.out.println("found: " + found);
 
     }
 
