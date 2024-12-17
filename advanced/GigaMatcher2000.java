@@ -49,7 +49,7 @@ class GigaMatcher2000 {
 
                     final boolean success = joinExistingGroupMeeting(timeslot, pair) || createNewGroupMeeting(timeslot, pair);
                     if (success) timeslotsCounter++;
-                    if (timeslotsCounter > 100) break;
+                    if (timeslotsCounter > 10) break;
                 }
 
             } else {
@@ -60,7 +60,7 @@ class GigaMatcher2000 {
 
                     final boolean success = createNewSoloMeeting(timeslot, pair);
                     if (success) timeslotsCounter++;
-                    if (timeslotsCounter > 100) break;
+                    if (timeslotsCounter > 10) break;
                 }
             }
         }

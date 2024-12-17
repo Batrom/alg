@@ -29,6 +29,9 @@ class Solver {
                 collector.submit(() -> new GigaMatcher2000(context, snapshot, index).match());
             }
             collector.collect();
+            System.out.println(snapshots.currentMaxIndex());
+            System.out.println(snapshots.snapshots().size());
+            System.out.println("----------------------------");
             snapshots.incrementCurrentMaxIndex();
         }
     }
