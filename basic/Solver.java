@@ -14,8 +14,7 @@ class Solver {
     List<Meeting> solve() {
         for (final var user : users) {
             for (final var companyId : user.companies()) {
-                final var added = meetingsHolder.addUserToExistingMeeting(user.id(), companyId);
-                if (!added) meetingsHolder.createMeeting(user.id(), companyId);
+                meetingsHolder.match(user.id(), companyId);
             }
         }
         return meetingsHolder.meetings();

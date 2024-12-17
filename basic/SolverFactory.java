@@ -121,7 +121,7 @@ class SolverFactory {
                 ));
     }
 
-    private static Map<Long, Deque<Room>> groupRooms(final List<Timeslot> timeslots) {
+    private static Map<Long, LinkedList<Room>> groupRooms(final List<Timeslot> timeslots) {
         return timeslots.stream()
                 .collect(toMap(Timeslot::id,
                         timeslot ->
