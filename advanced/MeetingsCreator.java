@@ -17,6 +17,8 @@ class MeetingsCreator {
     List<Meeting> createMeetings() {
         var meetings = extractMeetings();
 
+        final var list = meetings.stream().map(Map::size).toList();
+
         for (var pair : context.pairs()) {
             meetings = pickBestMeetings(pair, meetings);
         }
@@ -25,7 +27,7 @@ class MeetingsCreator {
     }
 
     private static List<Meeting> flattenMeetings(final List<Map<Pair, Meeting>> meetings) {
-        return meetings.isEmpty() ? List.of() : meetings.getFirst().values().stream().toList();
+        return meetings.isEmpty() ? List.of() : meetings.getFirst().values().stream().distinct().toList();
     }
 
     private static List<Map<Pair, Meeting>> pickBestMeetings(final Pair pair, final List<Map<Pair, Meeting>> meetings) {

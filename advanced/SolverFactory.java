@@ -48,11 +48,16 @@ class SolverFactory {
 
     private static Context createContext(final List<User> users, final List<Company> companies) {
         final var pairs = createPairs(users);
-        final var usersThatAllowGroupMeetings = usersThatAllowGroupMeetings(users);
-        final var companiesThatAllowGroupMeetings = companiesThatAllowGroupMeetings(companies);
+        final var groupMeetingGateKeeper = groupMeetingGateKeeper(users, companies);
         final var timeslotsHolder = timeslotsHolder(users, companies);
 
-        return new Context(usersThatAllowGroupMeetings, companiesThatAllowGroupMeetings, timeslotsHolder, pairs);
+        return new Context(groupMeetingGateKeeper, timeslotsHolder, pairs);
+    }
+
+    private static GroupMeetingGateKeeper groupMeetingGateKeeper(final List<User> users, final List<Company> companies) {
+        final var usersThatAllowGroupMeetings = usersThatAllowGroupMeetings(users);
+        final var companiesThatAllowGroupMeetings = companiesThatAllowGroupMeetings(companies);
+        return new GroupMeetingGateKeeper(usersThatAllowGroupMeetings, companiesThatAllowGroupMeetings);
     }
 
     private static TimeslotsHolder timeslotsHolder(final List<User> users, final List<Company> companies) {

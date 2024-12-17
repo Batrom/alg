@@ -1,16 +1,20 @@
 package advanced;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
-record MeetingRoom(Room room, List<Long> userIds) {
+record MeetingRoom(Room room, Set<Long> userIds) {
 
     MeetingRoom(final Room room, final long userId) {
-        this(room, MatchingHelper.listOf(userId));
+        this(room, MatchingHelper.setOf(userId));
     }
 
     void addUser(final long userId) {
         userIds.add(userId);
+    }
+
+    void removeUser(final long userId) {
+        userIds.remove(userId);
     }
 
     boolean isNotFull() {
@@ -21,11 +25,7 @@ record MeetingRoom(Room room, List<Long> userIds) {
         return !userIds.isEmpty();
     }
 
-    void removeLast() {
-        userIds.removeLast();
-    }
-
     MeetingRoom copy() {
-        return new MeetingRoom(room, new ArrayList<>(userIds));
+        return new MeetingRoom(room, new HashSet<>(userIds));
     }
 }

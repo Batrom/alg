@@ -1,6 +1,7 @@
 package advanced;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,12 +12,11 @@ class GigaMatcher2000 {
     private final Map<Long, Set<Long>> usersAvailableTimeslots;
     private final Map<Long, Set<Long>> companiesAvailableTimeslots;
     private final RoomsHolder roomsHolder;
-
-    private boolean updateSnapshots = false;
     private final Snapshots snapshots;
     private final Context context;
 
     private int maxTimeslotsCounter;
+    private boolean updateSnapshots;
 
     GigaMatcher2000(final Context context, final Snapshot snapshot, final int index, final int snapshotCount) {
         this.context = context;
@@ -27,7 +27,8 @@ class GigaMatcher2000 {
         this.usersAvailableTimeslots = snapshot.usersAvailableTimeslots();
         this.companiesAvailableTimeslots = snapshot.companiesAvailableTimeslots();
         this.roomsHolder = snapshot.roomsHolder();
-        this.maxTimeslotsCounter = snapshotCount > 1000 ? 0 : 3;
+        this.maxTimeslotsCounter = snapshotCount > 1000 ? 0 : 2;
+        this.updateSnapshots = false;
     }
 
     Snapshots match() {
@@ -43,24 +44,23 @@ class GigaMatcher2000 {
             final var userId = pair.userId();
             final var companyId = pair.companyId();
             final var userAvailableTimeslots = usersAvailableTimeslots.get(userId);
-            final var canBeGroupMeeting = canBeGroupMeeting(userId, companyId);
+
+            if (userAvailableTimeslots == null || userAvailableTimeslots.isEmpty()) {
+                updateSnapshots();
+                return;
+            }
+
             var timeslotsCounter = 0;
-
-            if (canBeGroupMeeting) {
-                final var timeslots = context.timeslotsHolder().groupMeetingsTimeslots(userId, companyId);
-
-                for (final var timeslot : timeslots) {
+            if (allowGroupMeeting(userId, companyId)) {
+                for (final var timeslot : groupMeetingsTimeslots(pair)) {
                     if (timeslotIsUsed(timeslot, userAvailableTimeslots)) continue;
 
                     final boolean success = joinExistingGroupMeeting(timeslot, pair) || createNewGroupMeeting(timeslot, pair);
                     if (success) timeslotsCounter++;
                     if (timeslotsCounter > maxTimeslotsCounter) break;
                 }
-
             } else {
-                final var timeslots = context.timeslotsHolder().soloMeetingsTimeslots(userId, companyId);
-
-                for (final var timeslot : timeslots) {
+                for (final var timeslot : soloMeetingsTimeslots(pair)) {
                     if (timeslotIsUsed(timeslot, userAvailableTimeslots)) continue;
 
                     final boolean success = createNewSoloMeeting(timeslot, pair);
@@ -69,10 +69,22 @@ class GigaMatcher2000 {
                 }
             }
         }
+        updateSnapshots();
+    }
+
+    private void updateSnapshots() {
         if (updateSnapshots) {
             snapshots.updateSnapshots(index, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, roomsHolder);
             updateSnapshots = false;
         }
+    }
+
+    private List<Long> soloMeetingsTimeslots(final Pair pair) {
+        return context.timeslotsHolder().soloMeetingsTimeslots(pair.userId(), pair.companyId());
+    }
+
+    private List<Long> groupMeetingsTimeslots(final Pair pair) {
+        return context.timeslotsHolder().groupMeetingsTimeslots(pair.userId(), pair.companyId());
     }
 
     private static boolean timeslotIsUsed(final Long timeslot, final Set<Long> userAvailableTimeslots) {
@@ -96,7 +108,7 @@ class GigaMatcher2000 {
             matchRecursively();
 
             userAvailableTimeslots.add(timeslot);
-            meetingRoom.removeLast();
+            meetingRoom.removeUser(userId);
             index--;
 
             return true;
@@ -126,7 +138,6 @@ class GigaMatcher2000 {
                 roomsHolder.addRoomForSoloMeeting(timeslot, room);
                 index--;
                 return true;
-
             }
         }
         return false;
@@ -154,7 +165,6 @@ class GigaMatcher2000 {
                 roomsHolder.addRoomForGroupMeeting(timeslot, room);
                 index--;
                 return true;
-
             }
         }
         return false;
@@ -201,8 +211,8 @@ class GigaMatcher2000 {
         return timeslotMeetingRooms(timeslot, groupMeetings);
     }
 
-    private boolean canBeGroupMeeting(final long userId, final long companyId) {
-        return context.usersThatAllowGroupMeetings().contains(userId) && context.companiesThatAllowGroupMeetings().contains(companyId);
+    private boolean allowGroupMeeting(final long userId, final long companyId) {
+        return context.groupMeetingGateKeeper().bothAllowsGroupMeetings(userId, companyId);
     }
 
     private MeetingRoom existingGroupMeetingRoom(final long timeslot, final long companyId) {

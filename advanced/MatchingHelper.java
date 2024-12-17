@@ -16,6 +16,12 @@ class MatchingHelper {
         return list;
     }
 
+    static <T> Set<T> setOf(final T obj) {
+        final var set = new HashSet<T>();
+        set.add(obj);
+        return set;
+    }
+
     static Map<Long, Set<Long>> copyTimeslots(final Map<Long, Set<Long>> original) {
         final var copy = new HashMap<Long, Set<Long>>(original.size());
 

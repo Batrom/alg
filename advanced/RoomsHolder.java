@@ -20,7 +20,7 @@ record RoomsHolder(Map<Long, Deque<Room>> timeslotRooms) {
     }
 
     void addRoomForGroupMeeting(final long timeslot, final Room room) {
-        timeslotRooms.get(timeslot).addFirst(room);
+        timeslotRooms.get(timeslot).addLast(room);
     }
 
     RoomsHolder copy() {
