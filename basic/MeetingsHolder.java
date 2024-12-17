@@ -35,7 +35,6 @@ class MeetingsHolder {
         return Stream.concat(
                         soloMeetings.values().stream().map(Map::values).flatMap(Collection::stream),
                         groupMeetings.values().stream().map(Map::values).flatMap(Collection::stream))
-                .filter(Objects::nonNull)
                 .toList();
     }
 

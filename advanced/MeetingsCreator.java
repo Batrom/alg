@@ -17,8 +17,6 @@ class MeetingsCreator {
     List<Meeting> createMeetings() {
         var meetings = extractMeetings();
 
-        final var list = meetings.stream().map(Map::size).toList();
-
         for (var pair : context.pairs()) {
             meetings = pickBestMeetings(pair, meetings);
         }
