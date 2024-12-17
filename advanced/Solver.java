@@ -1,6 +1,6 @@
 package advanced;
 
-import java.util.Set;
+import java.util.List;
 
 class Solver {
     private final Context context;
@@ -15,12 +15,12 @@ class Solver {
         this.snapshots = snapshots;
     }
 
-    Set<Meeting> createMeetings() {
-        findAllPossibleMeetingsConfigurations();
+    List<Meeting> createMeetings() {
+        findPossibleMeetingsConfigurations();
         return meetingsCreator.createMeetings();
     }
 
-    private void findAllPossibleMeetingsConfigurations() {
+    private void findPossibleMeetingsConfigurations() {
         final var collector = new SnapshotsCollector(snapshots);
         while (snapshots.currentMaxIndex() < context.pairs().size()) {
             final var index = snapshots.currentMaxIndex();

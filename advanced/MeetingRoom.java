@@ -3,9 +3,10 @@ package advanced;
 import java.util.ArrayList;
 import java.util.List;
 
-record MeetingRoom(int capacity, List<Long> userIds) {
-    MeetingRoom(final int capacity, final long userId) {
-        this(capacity, MatchingHelper.listOf(userId));
+record MeetingRoom(Room room, List<Long> userIds) {
+
+    MeetingRoom(final Room room, final long userId) {
+        this(room, MatchingHelper.listOf(userId));
     }
 
     void addUser(final long userId) {
@@ -13,7 +14,7 @@ record MeetingRoom(int capacity, List<Long> userIds) {
     }
 
     boolean isNotFull() {
-        return capacity != userIds.size();
+        return room.capacity() != userIds.size();
     }
 
     boolean isNotEmpty() {
@@ -25,6 +26,6 @@ record MeetingRoom(int capacity, List<Long> userIds) {
     }
 
     MeetingRoom copy() {
-        return new MeetingRoom(capacity, new ArrayList<>(userIds));
+        return new MeetingRoom(room, new ArrayList<>(userIds));
     }
 }

@@ -10,7 +10,7 @@ class GigaMatcher2000 {
     private final Map<Long, Map<Long, MeetingRoom>> groupMeetings;
     private final Map<Long, Set<Long>> usersAvailableTimeslots;
     private final Map<Long, Set<Long>> companiesAvailableTimeslots;
-    private final Map<Long, Map<Integer, Integer>> timeslotsAvailableRooms;
+    private final RoomsHolder roomsHolder;
 
     private boolean updateSnapshots = false;
     private final Snapshots snapshots;
@@ -24,7 +24,7 @@ class GigaMatcher2000 {
         this.groupMeetings = snapshot.groupMeetings();
         this.usersAvailableTimeslots = snapshot.usersAvailableTimeslots();
         this.companiesAvailableTimeslots = snapshot.companiesAvailableTimeslots();
-        this.timeslotsAvailableRooms = snapshot.timeslotsAvailableRooms();
+        this.roomsHolder = snapshot.roomsHolder();
     }
 
     Snapshots match() {
@@ -36,18 +36,36 @@ class GigaMatcher2000 {
         if (index < context.pairs().size()) {
             final var pair = context.pairs().get(index);
             final var userId = pair.userId();
-            final var userTimeslots = context.usersTimeslots().get(userId);
+            final var companyId = pair.companyId();
             final var userAvailableTimeslots = usersAvailableTimeslots.get(userId);
+            final var canBeGroupMeeting = canBeGroupMeeting(userId, companyId);
+            var timeslotsCounter = 0;
 
-            for (final var timeslot : userTimeslots) {
-                if (timeslotIsUsed(timeslot, userAvailableTimeslots)) continue;
+            if (canBeGroupMeeting) {
+                final var timeslots = context.timeslotsHolder().groupMeetingsTimeslots(userId, companyId);
 
-                addToExistingGroupMeeting(timeslot, pair);
-                createNewMeeting(timeslot, pair);
+                for (final var timeslot : timeslots) {
+                    if (timeslotIsUsed(timeslot, userAvailableTimeslots)) continue;
+
+                    final boolean success = joinExistingGroupMeeting(timeslot, pair) || createNewGroupMeeting(timeslot, pair);
+                    if (success) timeslotsCounter++;
+                    if (timeslotsCounter > 100) break;
+                }
+
+            } else {
+                final var timeslots = context.timeslotsHolder().soloMeetingsTimeslots(userId, companyId);
+
+                for (final var timeslot : timeslots) {
+                    if (timeslotIsUsed(timeslot, userAvailableTimeslots)) continue;
+
+                    final boolean success = createNewSoloMeeting(timeslot, pair);
+                    if (success) timeslotsCounter++;
+                    if (timeslotsCounter > 100) break;
+                }
             }
         }
         if (updateSnapshots) {
-            snapshots.updateSnapshots(index, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, timeslotsAvailableRooms);
+            snapshots.updateSnapshots(index, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, roomsHolder);
             updateSnapshots = false;
         }
     }
@@ -56,13 +74,12 @@ class GigaMatcher2000 {
         return userAvailableTimeslots == null || !userAvailableTimeslots.contains(timeslot);
     }
 
-    private void addToExistingGroupMeeting(final long timeslot, final Pair pair) {
+    private boolean joinExistingGroupMeeting(final long timeslot, final Pair pair) {
         final var companyId = pair.companyId();
         final var userId = pair.userId();
         final var meetingRoom = existingGroupMeetingRoom(timeslot, companyId);
-        final var canBeGroupMeeting = canBeGroupMeeting(userId, companyId);
 
-        if (canBeGroupMeeting && meetingRoom != null) {
+        if (meetingRoom != null) {
             final var userAvailableTimeslots = usersAvailableTimeslots.get(userId);
 
             userAvailableTimeslots.remove(timeslot);
@@ -75,48 +92,73 @@ class GigaMatcher2000 {
             userAvailableTimeslots.add(timeslot);
             meetingRoom.removeLast();
             index--;
+
+            return true;
         }
+        return false;
     }
 
-    private void createNewMeeting(final long timeslot, final Pair pair) {
+    private boolean createNewSoloMeeting(final long timeslot, final Pair pair) {
         final var companyId = pair.companyId();
         final var userId = pair.userId();
         final var companyAvailableTimeslots = companiesAvailableTimeslots.get(companyId);
         final var userAvailableTimeslots = usersAvailableTimeslots.get(userId);
-        final var timeslotRooms = timeslotsAvailableRooms.get(timeslot);
 
-        if (companyAvailableTimeslots != null && companyAvailableTimeslots.contains(timeslot) && timeslotRooms != null) {
-            for (final var capacityToRoomsCount : timeslotRooms.entrySet()) {
-                final var capacity = capacityToRoomsCount.getKey();
-                final var roomsCount = capacityToRoomsCount.getValue();
-                if (roomsCount == 0) continue;
+        if (companyAvailableTimeslots != null && companyAvailableTimeslots.contains(timeslot)) {
+            final var room = roomsHolder.roomForSoloMeeting(timeslot);
+            if (room != null) {
 
                 companyAvailableTimeslots.remove(timeslot);
                 userAvailableTimeslots.remove(timeslot);
-
-                final var meetingRoom = new MeetingRoom(capacity, userId);
-                capacityToRoomsCount.setValue(roomsCount - 1);
+                final var meetingRoom = new MeetingRoom(room, userId);
                 index++;
 
-                updateSnapshots = true;
-                if (canBeGroupMeeting(userId, companyId)) {
-                    newGroupMeeting(timeslot, companyId, meetingRoom);
-                } else {
-                    newSoloMeeting(timeslot, companyId, meetingRoom);
-                }
+                newSoloMeeting(timeslot, companyId, meetingRoom);
 
                 companyAvailableTimeslots.add(timeslot);
                 userAvailableTimeslots.add(timeslot);
-                capacityToRoomsCount.setValue(roomsCount + 1);
+                roomsHolder.addRoomForSoloMeeting(timeslot, room);
                 index--;
+                return true;
+
             }
         }
+        return false;
+    }
+
+    private boolean createNewGroupMeeting(final long timeslot, final Pair pair) {
+        final var companyId = pair.companyId();
+        final var userId = pair.userId();
+        final var companyAvailableTimeslots = companiesAvailableTimeslots.get(companyId);
+        final var userAvailableTimeslots = usersAvailableTimeslots.get(userId);
+
+        if (companyAvailableTimeslots != null && companyAvailableTimeslots.contains(timeslot)) {
+            final var room = roomsHolder.roomForGroupMeeting(timeslot);
+            if (room != null) {
+
+                companyAvailableTimeslots.remove(timeslot);
+                userAvailableTimeslots.remove(timeslot);
+                final var meetingRoom = new MeetingRoom(room, userId);
+                index++;
+
+                newGroupMeeting(timeslot, companyId, meetingRoom);
+
+                companyAvailableTimeslots.add(timeslot);
+                userAvailableTimeslots.add(timeslot);
+                roomsHolder.addRoomForGroupMeeting(timeslot, room);
+                index--;
+                return true;
+
+            }
+        }
+        return false;
     }
 
     private void newSoloMeeting(final long timeslot, final long companyId, final MeetingRoom meetingRoom) {
         final var meetingRooms = timeslotSoloMeetingRooms(timeslot);
         meetingRooms.put(companyId, meetingRoom);
 
+        updateSnapshots = true;
         matchRecursively();
 
         meetingRooms.remove(companyId);
@@ -126,6 +168,7 @@ class GigaMatcher2000 {
         final var meetingRooms = timeslotGroupMeetingRooms(timeslot);
         meetingRooms.put(companyId, meetingRoom);
 
+        updateSnapshots = true;
         matchRecursively();
 
         meetingRooms.remove(companyId);

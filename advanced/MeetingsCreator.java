@@ -2,8 +2,6 @@ package advanced;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -16,24 +14,7 @@ class MeetingsCreator {
         this.snapshots = snapshots;
     }
 
-    Set<Meeting> createMeetings() {
-        final var meetings = pickMeetings();
-        final var timeslotsRooms = createTimeslotsRooms();
-
-        return meetings.stream()
-                .map(meeting -> createMeeting(meeting, timeslotsRooms))
-                .collect(Collectors.toSet());
-    }
-
-    private static Meeting createMeeting(final MeetingWithoutRoom meeting, final Map<Long, Map<Integer, Long>> timeslotsRooms) {
-        return Meeting.from(meeting, timeslotsRooms.get(meeting.timeslot()).get(meeting.roomCapacity()));
-    }
-
-    private Map<Long, Map<Integer, Long>> createTimeslotsRooms() {
-        return context.timeslots().stream().collect(toMap(Timeslot::id, e -> e.rooms().stream().collect(toMap(Room::capacity, Room::id))));
-    }
-
-    private List<MeetingWithoutRoom> pickMeetings() {
+    List<Meeting> createMeetings() {
         var meetings = extractMeetings();
 
         for (var pair : context.pairs()) {
@@ -43,11 +24,11 @@ class MeetingsCreator {
         return flattenMeetings(meetings);
     }
 
-    private static List<MeetingWithoutRoom> flattenMeetings(final List<Map<Pair, MeetingWithoutRoom>> meetings) {
+    private static List<Meeting> flattenMeetings(final List<Map<Pair, Meeting>> meetings) {
         return meetings.isEmpty() ? List.of() : meetings.getFirst().values().stream().toList();
     }
 
-    private static List<Map<Pair, MeetingWithoutRoom>> pickBestMeetings(final Pair pair, final List<Map<Pair, MeetingWithoutRoom>> meetings) {
+    private static List<Map<Pair, Meeting>> pickBestMeetings(final Pair pair, final List<Map<Pair, Meeting>> meetings) {
         final var soloMeetings = meetings.stream()
                 .filter(entry -> isSoloMeeting(pair, entry))
                 .toList();
@@ -59,15 +40,15 @@ class MeetingsCreator {
         return meetings;
     }
 
-    private static boolean isSoloMeeting(final Pair pair, final Map<Pair, MeetingWithoutRoom> entry) {
+    private static boolean isSoloMeeting(final Pair pair, final Map<Pair, Meeting> entry) {
         final var meeting = entry.get(pair);
         return meeting != null && meeting.solo();
     }
 
-    private List<Map<Pair, MeetingWithoutRoom>> extractMeetings() {
+    private List<Map<Pair, Meeting>> extractMeetings() {
         return snapshots.snapshots()
                 .stream()
-                .map(MeetingWithoutRoom::toMeetings)
+                .map(Meeting::from)
                 .map(meetings ->
                         meetings.stream()
                                 .flatMap(meeting ->

@@ -1,14 +1,38 @@
 package advanced;
 
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public record Meeting(long timeslot, long companyId, long roomId, Set<Long> userIds, boolean solo) {
 
-    static Meeting from(final MeetingWithoutRoom meetingWithoutRoom, final long roomId) {
-        return new Meeting(meetingWithoutRoom.timeslot(),
-                meetingWithoutRoom.companyId(),
-                roomId,
-                meetingWithoutRoom.userIds(),
-                meetingWithoutRoom.solo());
+    static Set<Meeting> from(final Snapshot snapshot) {
+        return Stream.concat(toGroupMeetings(snapshot), toSoloMeetings(snapshot)).collect(Collectors.toSet());
+    }
+
+    private static Stream<Meeting> toGroupMeetings(final Snapshot snapshot) {
+        return toMeetings(snapshot.groupMeetings(), false);
+    }
+
+    private static Stream<Meeting> toSoloMeetings(final Snapshot snapshot) {
+        return toMeetings(snapshot.soloMeetings(), true);
+    }
+
+    private static Stream<Meeting> toMeetings(final Map<Long, Map<Long, MeetingRoom>> meetingsMap, final boolean solo) {
+        return meetingsMap
+                .entrySet()
+                .stream()
+                .flatMap(entry -> entry.getValue()
+                        .entrySet()
+                        .stream()
+                        .map(innerEntry ->
+                                new Meeting(entry.getKey(),
+                                        innerEntry.getKey(),
+                                        innerEntry.getValue().room().id(),
+                                        new HashSet<>(innerEntry.getValue().userIds()),
+                                        solo))
+                );
     }
 }

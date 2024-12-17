@@ -6,7 +6,6 @@ import java.util.Set;
 
 record Context(Set<Long> usersThatAllowGroupMeetings,
                Set<Long> companiesThatAllowGroupMeetings,
-               Map<Long, Set<Long>> usersTimeslots,
-               List<Timeslot> timeslots,
+               TimeslotsHolder timeslotsHolder,
                List<Pair> pairs) {
 }

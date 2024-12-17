@@ -8,7 +8,7 @@ import java.util.Set;
 
 class Snapshots {
     private int currentMaxIndex;
-    private List<Snapshot> snapshots;
+    private final List<Snapshot> snapshots;
 
     Snapshots(final int currentMaxIndex, final Snapshot snapshot) {
         this.currentMaxIndex = currentMaxIndex;
@@ -32,14 +32,13 @@ class Snapshots {
                 snapshots.addAll(otherSnapshots.snapshots);
             }
         }
-        snapshots = snapshots.subList(0, Math.min(1000, snapshots.size()));
     }
 
     static Snapshots initialize(final Map<Long, Set<Long>> usersTimeslots,
                                 final Map<Long, Set<Long>> companiesTimeslots,
-                                final Map<Long, Map<Integer, Integer>> timeslotsRooms) {
+                                final RoomsHolder roomsHolder) {
 
-        final var initialSnapshot = new Snapshot(new HashMap<>(), new HashMap<>(), usersTimeslots, companiesTimeslots, timeslotsRooms);
+        final var initialSnapshot = new Snapshot(new HashMap<>(), new HashMap<>(), usersTimeslots, companiesTimeslots, roomsHolder);
         return new Snapshots(new ArrayList<>(List.of(initialSnapshot)));
     }
 
@@ -48,7 +47,7 @@ class Snapshots {
                          final Map<Long, Map<Long, MeetingRoom>> groupMeetings,
                          final Map<Long, Set<Long>> usersAvailableTimeslots,
                          final Map<Long, Set<Long>> companiesAvailableTimeslots,
-                         final Map<Long, Map<Integer, Integer>> timeslotsAvailableRooms) {
+                         final RoomsHolder roomsHolder) {
         if (currentMaxIndex < index) snapshots.clear();
 
         if (currentMaxIndex <= index) {
@@ -59,7 +58,7 @@ class Snapshots {
                     MatchingHelper.copyMeetings(groupMeetings),
                     MatchingHelper.copyTimeslots(usersAvailableTimeslots),
                     MatchingHelper.copyTimeslots(companiesAvailableTimeslots),
-                    MatchingHelper.copyRooms(timeslotsAvailableRooms)));
+                    roomsHolder.copy()));
         }
     }
 

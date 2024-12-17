@@ -12,6 +12,5 @@ record Snapshot(
         Map<Long, Set<Long>> usersAvailableTimeslots,
         // companyId to timeslots
         Map<Long, Set<Long>> companiesAvailableTimeslots,
-        // timeslot to (capacity to count)
-        Map<Long, Map<Integer, Integer>> timeslotsAvailableRooms) {
+        RoomsHolder roomsHolder) {
 }
