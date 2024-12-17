@@ -23,8 +23,8 @@ class SolverFactory {
     static Solver create(final List<User> users, final List<Company> companies, final List<Timeslot> timeslots) {
         final var roomsHolder = new RoomsHolder(groupRooms(timeslots));
 
-        final var usersThatAllowGroupMeetings = users.stream().filter(User::allowGroupMeetings).map(User::id).collect(toSet());
-        final var companiesThatAllowGroupMeetings = companies.stream().filter(Company::allowGroupMeetings).map(Company::id).collect(toSet());
+        final var usersThatAllowGroupMeetings = usersThatAllowGroupMeetings(users);
+        final var companiesThatAllowGroupMeetings = companiesThatAllowGroupMeetings(companies);
 
         final var groupMeetings = emptyMeetings(timeslots);
         final var soloMeetings = emptyMeetings(timeslots);
@@ -55,8 +55,7 @@ class SolverFactory {
     }
 
     private static Map<Long, Map<Long, List<Long>>> timeslotsForGroupMeetings(final List<User> users, final List<Company> companies) {
-        final var companiesThatAllowGroupMeetings = companies.stream().filter(Company::allowGroupMeetings).map(Company::id).collect(toSet());
-
+        final var companiesThatAllowGroupMeetings = companiesThatAllowGroupMeetings(companies);
         final var companiesTimeslots = companies.stream().collect(toMap(Company::id, Company::timeslots));
 
         final var map = users.stream()
@@ -90,16 +89,14 @@ class SolverFactory {
     }
 
     private static Map<Long, Map<Long, List<Long>>> timeslotsForSoloMeetings(final List<User> users, final List<Company> companies) {
-        final var companiesThatDontAllowGroupMeetings = companies.stream().filter(company -> !company.allowGroupMeetings()).map(Company::id).collect(toSet());
-
+        final var companiesThatAllowGroupMeetings = companiesThatAllowGroupMeetings(companies);
         final var companiesTimeslots = companies.stream().collect(toMap(Company::id, Company::timeslots));
 
         final var map = users.stream()
-                .filter(user -> !user.allowGroupMeetings())
                 .flatMap(user ->
                         user.companies()
                                 .stream()
-                                .filter(companiesThatDontAllowGroupMeetings::contains)
+                                .filter(company -> !user.allowGroupMeetings() || !companiesThatAllowGroupMeetings.contains(company))
                                 .flatMap(companyId ->
                                         user.timeslots()
                                                 .stream()
@@ -132,6 +129,14 @@ class SolverFactory {
                                         .stream()
                                         .sorted(comparingInt(Room::capacity))
                                         .collect(toCollection(LinkedList::new))));
+    }
+
+    private static Set<Long> companiesThatAllowGroupMeetings(final List<Company> companies) {
+        return companies.stream().filter(Company::allowGroupMeetings).map(Company::id).collect(toSet());
+    }
+
+    private static Set<Long> usersThatAllowGroupMeetings(final List<User> users) {
+        return users.stream().filter(User::allowGroupMeetings).map(User::id).collect(toSet());
     }
 }
 

@@ -89,7 +89,7 @@ class SolverFactory {
     }
 
     private static Map<Long, Map<Long, List<Long>>> timeslotsForGroupMeetings(final List<User> users, final List<Company> companies) {
-        final var companiesThatAllowGroupMeetings = companies.stream().filter(Company::allowGroupMeetings).map(Company::id).collect(toSet());
+        final var companiesThatAllowGroupMeetings = companiesThatAllowGroupMeetings(companies);
         final var companiesTimeslots = companies.stream().collect(toMap(Company::id, Company::timeslots));
 
         final var map = users.stream()
@@ -123,23 +123,20 @@ class SolverFactory {
     }
 
     private static Map<Long, Map<Long, List<Long>>> timeslotsForSoloMeetings(final List<User> users, final List<Company> companies) {
-        final var companiesThatDontAllowGroupMeetings = companies.stream().filter(company -> !company.allowGroupMeetings()).map(Company::id).collect(toSet());
-
+        final var companiesThatAllowGroupMeetings = companiesThatAllowGroupMeetings(companies);
         final var companiesTimeslots = companies.stream().collect(toMap(Company::id, Company::timeslots));
 
         final var map = users.stream()
-                .filter(user -> !user.allowGroupMeetings())
                 .flatMap(user ->
                         user.companies()
                                 .stream()
-                                .filter(companiesThatDontAllowGroupMeetings::contains)
+                                .filter(company -> !user.allowGroupMeetings() || !companiesThatAllowGroupMeetings.contains(company))
                                 .flatMap(companyId ->
                                         user.timeslots()
                                                 .stream()
                                                 .filter(timeslot -> companiesTimeslots.get(companyId).contains(timeslot))
                                                 .map(timeslot -> Map.entry(companyId, timeslot))))
                 .collect(groupingBy(Map.Entry::getKey, collectingAndThen(groupingBy(Map.Entry::getValue, counting()), Collections::unmodifiableMap)));
-
 
         return users.stream()
                 .collect(toMap(User::id,

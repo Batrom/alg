@@ -11,6 +11,6 @@ record TimeslotsHolder(Map<Long, Map<Long, List<Long>>> timeslotsForGroupMeeting
     }
 
     List<Long> soloMeetingsTimeslots(final Long userId, final Long companyId) {
-        return timeslotsForGroupMeetings.get(userId).get(companyId);
+        return timeslotsForSoloMeetings.get(userId).get(companyId);
     }
 }
