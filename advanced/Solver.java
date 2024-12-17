@@ -21,18 +21,20 @@ class Solver {
     }
 
     private void findPossibleMeetingsConfigurations() {
-        final var collector = new SnapshotsCollector(snapshots);
         while (snapshots.currentMaxIndex() < context.pairs().size()) {
-            final var index = snapshots.currentMaxIndex();
-            System.out.println(index);
-            for (final var snapshot : snapshots.snapshots()) {
-                collector.submit(() -> new GigaMatcher2000(context, snapshot, index).match());
-            }
-            collector.collect();
-            System.out.println(snapshots.currentMaxIndex());
-            System.out.println(snapshots.snapshots().size());
-            System.out.println("----------------------------");
+            final var newSnapshots = generateSnapshots();
+            snapshots.mergeWith(newSnapshots);
             snapshots.incrementCurrentMaxIndex();
         }
+    }
+
+    private List<Snapshots> generateSnapshots() {
+        final var index = snapshots.currentMaxIndex();
+        final var snapshotCount = snapshots.snapshots().size();
+        return snapshots.snapshots()
+                .parallelStream()
+                .map(snapshot -> new GigaMatcher2000(context, snapshot, index, snapshotCount))
+                .map(GigaMatcher2000::match)
+                .toList();
     }
 }

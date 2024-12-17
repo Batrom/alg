@@ -26,8 +26,9 @@ class SnapshotsCollector {
     }
 
     void collect() {
-        initialSnapshots.mergeWith(otherSnapshots());
+        final var snapshots = otherSnapshots();
         waitForAllSubmission();
+        initialSnapshots.mergeWith(snapshots);
         futures.clear();
     }
 

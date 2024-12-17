@@ -16,7 +16,9 @@ class GigaMatcher2000 {
     private final Snapshots snapshots;
     private final Context context;
 
-    GigaMatcher2000(final Context context, final Snapshot snapshot, final int index) {
+    private int maxTimeslotsCounter;
+
+    GigaMatcher2000(final Context context, final Snapshot snapshot, final int index, final int snapshotCount) {
         this.context = context;
         this.index = index;
         this.snapshots = new Snapshots(index, snapshot);
@@ -25,6 +27,7 @@ class GigaMatcher2000 {
         this.usersAvailableTimeslots = snapshot.usersAvailableTimeslots();
         this.companiesAvailableTimeslots = snapshot.companiesAvailableTimeslots();
         this.roomsHolder = snapshot.roomsHolder();
+        this.maxTimeslotsCounter = snapshotCount > 1000 ? 0 : 3;
     }
 
     Snapshots match() {
@@ -33,6 +36,8 @@ class GigaMatcher2000 {
     }
 
     private void matchRecursively() {
+        maxTimeslotsCounter = Math.max(maxTimeslotsCounter, 0);
+
         if (index < context.pairs().size()) {
             final var pair = context.pairs().get(index);
             final var userId = pair.userId();
@@ -49,7 +54,7 @@ class GigaMatcher2000 {
 
                     final boolean success = joinExistingGroupMeeting(timeslot, pair) || createNewGroupMeeting(timeslot, pair);
                     if (success) timeslotsCounter++;
-                    if (timeslotsCounter > 10) break;
+                    if (timeslotsCounter > maxTimeslotsCounter) break;
                 }
 
             } else {
@@ -60,7 +65,7 @@ class GigaMatcher2000 {
 
                     final boolean success = createNewSoloMeeting(timeslot, pair);
                     if (success) timeslotsCounter++;
-                    if (timeslotsCounter > 10) break;
+                    if (timeslotsCounter > maxTimeslotsCounter) break;
                 }
             }
         }
@@ -87,6 +92,7 @@ class GigaMatcher2000 {
             index++;
 
             updateSnapshots = true;
+            maxTimeslotsCounter--;
             matchRecursively();
 
             userAvailableTimeslots.add(timeslot);
@@ -159,6 +165,7 @@ class GigaMatcher2000 {
         meetingRooms.put(companyId, meetingRoom);
 
         updateSnapshots = true;
+        maxTimeslotsCounter--;
         matchRecursively();
 
         meetingRooms.remove(companyId);
@@ -169,6 +176,7 @@ class GigaMatcher2000 {
         meetingRooms.put(companyId, meetingRoom);
 
         updateSnapshots = true;
+        maxTimeslotsCounter--;
         matchRecursively();
 
         meetingRooms.remove(companyId);
