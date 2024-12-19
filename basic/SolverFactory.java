@@ -1,7 +1,7 @@
 package basic;
 
 import java.util.Collections;
-import java.util.Deque;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -21,6 +21,13 @@ import static java.util.stream.Collectors.toSet;
 class SolverFactory {
 
     static Solver create(final List<User> users, final List<Company> companies, final List<Timeslot> timeslots) {
+        final var meetingsHolder = createMeetingsHolder(users, companies, timeslots);
+
+
+        return new Solver(meetingsHolder, users);
+    }
+
+    private static MeetingsHolder createMeetingsHolder(final List<User> users, final List<Company> companies, final List<Timeslot> timeslots) {
         final var roomsHolder = new RoomsHolder(groupRooms(timeslots));
 
         final var usersThatAllowGroupMeetings = usersThatAllowGroupMeetings(users);
@@ -37,9 +44,14 @@ class SolverFactory {
 
         final var timeslotsHolder = new TimeslotsHolder(timeslotsForGroupMeetings, timeslotsForSoloMeetings);
 
-        final var meetingsHolder = new MeetingsHolder(roomsHolder, timeslotsHolder, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, usersThatAllowGroupMeetings, companiesThatAllowGroupMeetings);
+        final var usersComparator = createUsersComparator(users);
 
-        return new Solver(meetingsHolder, users);
+        return new MeetingsHolder(roomsHolder, timeslotsHolder, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, usersThatAllowGroupMeetings, companiesThatAllowGroupMeetings, usersComparator);
+    }
+
+    private static Comparator<Long> createUsersComparator(final List<User> users) {
+        final var map = users.stream().collect(toMap(User::id, users::indexOf));
+        return comparingInt(map::get);
     }
 
     private static Map<Long, Set<Long>> companiesAvailableTimeslots(final List<Company> companies) {
