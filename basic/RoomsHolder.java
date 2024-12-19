@@ -23,9 +23,4 @@ record RoomsHolder(Map<Long, LinkedList<Room>> timeslotRooms) {
         rooms.push(room);
         rooms.sort(Comparator.comparing(Room::capacity));
     }
-
-    void remove(final long timeslot, final Room room) {
-        final var rooms = timeslotRooms.get(timeslot);
-        rooms.remove(room);
-    }
 }
