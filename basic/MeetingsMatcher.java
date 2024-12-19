@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 sealed abstract class MeetingsMatcher permits DefaultMeetingsMatcher, AlternativeMeetingsMatcher {
-    protected final MeetingsMatcherContext context;
+    protected MeetingsMatcherContext context;
 
     protected MeetingsMatcher(final MeetingsMatcherContext context) {
         this.context = context;
@@ -116,13 +116,10 @@ sealed abstract class MeetingsMatcher permits DefaultMeetingsMatcher, Alternativ
         final var userAvailableTimeslots = context.usersAvailableTimeslots().get(userId);
         for (final var timeslot : timeslots) {
             if (userAvailableTimeslots.contains(timeslot)) {
-                final var roomExists = context.roomsHolder().checkIfThereIsAnyFreeRoom(timeslot);
-                if (roomExists) {
-                    final var meeting = findMeeting(timeslot, companyId);
-                    if (meeting != null) {
-                        final var result = findAlternatives(userId, meeting);
-                        if (result != null) return result;
-                    }
+                final var meeting = findMeeting(timeslot, companyId);
+                if (meeting != null) {
+                    final var result = findAlternatives(userId, meeting);
+                    if (result != null) return result;
                 }
             }
         }

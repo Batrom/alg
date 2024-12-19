@@ -152,30 +152,3 @@ class SolverFactory {
         return users.stream().filter(User::allowGroupMeetings).map(User::id).collect(toSet());
     }
 }
-
-
-/*
-* - solo meetings -> take the smallest free room
-- create ranking of timeslots for user (given a timeslot and company pick one timeslot)
-
-
-group meetings:
-
-
-for each user timeslot and company return usersCount and sort by usersCount ascending -> take first one -> minimalize the chance of blocking
-
-
-
-
-
-Map<timeslot, Map<company, usersCount>>
-if group meeting then take the most occupied timeslot and company that is still free
-if group meeting take the biggest free room
-
-
-Map<timeslot, Map<company, usersCount>>
-if solo meeting then take the least occupied timeslot and company that is still free
-if solo meeting take the smallest free room
-
-
-* */

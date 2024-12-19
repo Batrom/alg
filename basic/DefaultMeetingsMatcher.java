@@ -8,7 +8,12 @@ final class DefaultMeetingsMatcher extends MeetingsMatcher {
 
     @Override
     protected Boolean findAlternatives(final long userId, final Meeting meeting) {
-        return AlternativeMeetingsMatcher.basedOn(this).findAlternatives(userId, meeting) ? true : null;
+        final var alternativeMeetingsMatcher = AlternativeMeetingsMatcher.basedOn(this);
+        final var alternativesFound = alternativeMeetingsMatcher.findAlternatives(userId, meeting);
+        if (alternativesFound) {
+            this.context = alternativeMeetingsMatcher.context;
+            return true;
+        } else return null;
     }
 
     @Override

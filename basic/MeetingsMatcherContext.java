@@ -24,8 +24,6 @@ record MeetingsMatcherContext(
         Comparator<Long> usersComparator
 ) {
 
-//    record RoomsHolder(Map<Long, LinkedList<Room>> timeslotRooms) {
-
     MeetingsMatcherContext deepCopy() {
         return new MeetingsMatcherContext(
                 copyRoomsHolder(),
@@ -84,5 +82,4 @@ record MeetingsMatcherContext(
     private static <T> BinaryOperator<T> takeFirst() {
         return (first, second) -> first;
     }
-
 }
