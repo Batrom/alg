@@ -21,13 +21,12 @@ import static java.util.stream.Collectors.toSet;
 class SolverFactory {
 
     static Solver create(final List<User> users, final List<Company> companies, final List<Timeslot> timeslots) {
-        final var meetingsHolder = createMeetingsHolder(users, companies, timeslots);
+        final var meetingsMatcher = createMeetingsMatcher(users, companies, timeslots);
 
-
-        return new Solver(meetingsHolder, users);
+        return new Solver(meetingsMatcher, users);
     }
 
-    private static MeetingsHolder createMeetingsHolder(final List<User> users, final List<Company> companies, final List<Timeslot> timeslots) {
+    private static MeetingsMatcher createMeetingsMatcher(final List<User> users, final List<Company> companies, final List<Timeslot> timeslots) {
         final var roomsHolder = new RoomsHolder(groupRooms(timeslots));
 
         final var usersThatAllowGroupMeetings = usersThatAllowGroupMeetings(users);
@@ -46,7 +45,9 @@ class SolverFactory {
 
         final var usersComparator = createUsersComparator(users);
 
-        return new MeetingsHolder(roomsHolder, timeslotsHolder, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, usersThatAllowGroupMeetings, companiesThatAllowGroupMeetings, usersComparator);
+        final var context = new MeetingsMatcherContext(roomsHolder, timeslotsHolder, soloMeetings, groupMeetings, usersAvailableTimeslots, companiesAvailableTimeslots, usersThatAllowGroupMeetings, companiesThatAllowGroupMeetings, usersComparator);
+
+        return new DefaultMeetingsMatcher(context);
     }
 
     private static Comparator<Long> createUsersComparator(final List<User> users) {
